@@ -8,7 +8,7 @@ import (
 )
 
 func visit(path string, f os.FileInfo, err error) error {
-	fmt.Printf("Visited: %s\n", path)
+	fmt.Printf("Walked: %s\n", path)
 	return nil
 }
 
