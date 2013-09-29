@@ -16,5 +16,5 @@ func main() {
 	flag.Parse()
 	root := flag.Arg(0)
 	err := filepath.Walk(root, visit)
-	fmt.Printf("filepath.Walk() returned %v\n", err)
+	fmt.Printf("wandered %v\n", err)
 }
