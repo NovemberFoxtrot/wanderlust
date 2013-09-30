@@ -3,18 +3,46 @@ package main
 import (
 	"flag"
 	"fmt"
+	"image"
+	_ "image/color"
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/png"
 	"os"
 	"path/filepath"
 )
 
 func visit(path string, f os.FileInfo, err error) error {
-	fmt.Printf("Visited: %s\n", path)
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Fprintln(os.Stderr, "recovered in f", r)
+		}
+	}()
+
+	file, err := os.Open(path)
+	defer file.Close()
+
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "error", err)
+	}
+
+	if f.IsDir() {
+		return nil
+	}
+
+	_, _, err = image.Decode(file)
+
+	if err != nil {
+		return nil
+	}
+
+	fmt.Println(path)
+
 	return nil
 }
 
 func main() {
 	flag.Parse()
 	root := flag.Arg(0)
-	err := filepath.Walk(root, visit)
-	fmt.Printf("filepath.Walk() returned %v\n", err)
+	filepath.Walk(root, visit)
 }
