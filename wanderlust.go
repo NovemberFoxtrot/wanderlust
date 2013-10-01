@@ -10,7 +10,6 @@ import (
 	_ "image/png"
 	"os"
 	"path/filepath"
-	"time"
 )
 
 func visit(path string, f os.FileInfo, err error) error {
@@ -43,7 +42,6 @@ func visit(path string, f os.FileInfo, err error) error {
 }
 
 func main() {
-	fmt.Println(time.Now())
 	flag.Parse()
 	root := flag.Arg(0)
 	filepath.Walk(root, visit)
