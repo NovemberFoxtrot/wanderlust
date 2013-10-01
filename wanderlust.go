@@ -37,8 +37,7 @@ func visit(path string, f os.FileInfo, err error) error {
 		return nil
 	}
 
-
-	fmt.Println(path, f.ModTime())
+	fmt.Println(path)
 
 	return nil
 }
