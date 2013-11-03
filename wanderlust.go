@@ -15,7 +15,7 @@ import (
 func visit(path string, f os.FileInfo, err error) error {
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Fprintln(os.Stderr, path, "panic in f", r)
+			fmt.Fprintln(os.Stderr, path, "panic", r)
 		}
 	}()
 
