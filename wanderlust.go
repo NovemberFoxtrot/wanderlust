@@ -14,7 +14,7 @@ import (
 	"runtime"
 )
 
-func process(path string, f os.FileInfo, err error) bool {
+func process(path string) (string, bool) {
 	defer func() {
 		if r := recover(); r != nil {
 			fmt.Fprintln(os.Stderr, path, "panic", r)
@@ -31,25 +31,10 @@ func process(path string, f os.FileInfo, err error) bool {
 	_, _, err = image.Decode(file)
 
 	if err != nil {
-		return false
+		return path, false
 	}
 
-	return true
-}
-
-func addJobs(files []string, jobs chan<- string) {
-	for _, filename := range files {
-		jobs <- filename
-	}
-}
-
-func runJobs(done chan<- struct{}, results chan<- string, jobs <-chan string) {
-	for job := range jobs {
-		if result, ok := process(job); ok {
-			results <- result
-		}
-	}
-	done <- struct{}{}
+	return path, true
 }
 
 func readDir(dirname string) ([]os.FileInfo, error) {
@@ -70,10 +55,10 @@ func readDir(dirname string) ([]os.FileInfo, error) {
 	return list, nil
 }
 
-func wander(path string, paths chan os.FileInfo) {
-	path = filepath.Clean(path)
+func addJobs(root string, jobs chan<- string) {
+	root = filepath.Clean(root)
 
-	fi, err := os.Lstat(path)
+	fi, err := os.Lstat(root)
 	isDir := fi.IsDir()
 	isSymLink := fi.Mode()&os.ModeSymlink != 0
 
@@ -82,22 +67,32 @@ func wander(path string, paths chan os.FileInfo) {
 		os.Exit(1)
 	}
 
-	fileIDs, err := readDir(path)
+	fileIDs, err := readDir(root)
 
-	fmt.Println(fileIDs, err)
-
-	for _ = range fileIDs {
-		paths <- fi
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
 	}
+
+	for _, fileID := range fileIDs {
+		if fileID.IsDir() {
+			dirPresent = true
+			addJobs(filepath.Join(root, fileID.Name()), jobs)
+		} else {
+			jobs <- filepath.Join(root, fileID.Name())
+		}
+	}
+
+	// close(jobs)
 }
 
-func hunt(paths chan os.FileInfo) {
-	fmt.Println("hunting")
-
-	for {
-		path := <-paths
-		fmt.Println(path)
+func runJobs(done chan<- struct{}, results chan<- string, jobs <-chan string) {
+	for job := range jobs {
+		if result, ok := process(job); ok {
+			results <- result
+		}
 	}
+	done <- struct{}{}
 }
 
 func waitAndProcessResults(done <-chan struct{}, results <-chan string) {
@@ -109,31 +104,20 @@ func waitAndProcessResults(done <-chan struct{}, results <-chan string) {
 			working--
 		}
 	}
-DONE:
-	for {
-		select {
-		case result := <-results:
-			fmt.Println(results)
-		default:
-			break DONE
-		}
-	}
 }
 
 var workers = runtime.NumCPU()
 
 func main() {
-
 	runtime.GOMAXPROCS(workers)
 
-	paths := make(chan os.FileInfo, workers)
+	root := os.Args[1]
+
 	jobs := make(chan string, workers)
 	results := make(chan string)
 	done := make(chan struct{}, workers)
 
-	root := os.Args[1]
-
-	go addJobs()
+	go addJobs(root, jobs)
 
 	for i := 0; i < workers; i++ {
 		go runJobs(done, results, jobs)
