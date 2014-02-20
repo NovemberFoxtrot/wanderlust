@@ -76,7 +76,6 @@ func addJobs(root string, jobs chan<- string) {
 
 	for _, fileID := range fileIDs {
 		if fileID.IsDir() {
-			dirPresent = true
 			addJobs(filepath.Join(root, fileID.Name()), jobs)
 		} else {
 			jobs <- filepath.Join(root, fileID.Name())
