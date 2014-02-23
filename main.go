@@ -39,14 +39,13 @@ func process(path string) (string, bool) {
 
 func readDir(dirname string) ([]os.FileInfo, error) {
 	f, err := os.Open(dirname)
+	defer f.Close()
 
 	if err != nil {
 		return nil, err
 	}
 
 	list, err := f.Readdir(-1)
-
-	f.Close()
 
 	if err != nil {
 		return nil, err
@@ -55,10 +54,16 @@ func readDir(dirname string) ([]os.FileInfo, error) {
 	return list, nil
 }
 
-func addJobs(root string, jobs chan<- string) {
+func processDirectory(root string) []TheJob {
 	root = filepath.Clean(root)
 
 	fi, err := os.Lstat(root)
+
+	if err != nil {
+		fmt.Println(err)
+		return []TheJob{}
+	}
+
 	isDir := fi.IsDir()
 	isSymLink := fi.Mode()&os.ModeSymlink != 0
 
@@ -74,15 +79,41 @@ func addJobs(root string, jobs chan<- string) {
 		os.Exit(1)
 	}
 
+	var thejobs []TheJob
+
 	for _, fileID := range fileIDs {
-		if fileID.IsDir() {
-			go addJobs(filepath.Join(root, fileID.Name()), jobs)
-		} else {
-			jobs <- filepath.Join(root, fileID.Name())
-		}
+		thejob := TheJob{parent: root, fileinfo: fileID}
+		thejobs = append(thejobs, thejob)
 	}
 
-	// close(jobs)
+	return thejobs
+}
+
+type TheJob struct {
+	parent   string
+	fileinfo os.FileInfo
+}
+
+func addJobs(root string, jobs chan<- string) {
+	thejobs := processDirectory(root)
+
+	for len(thejobs) > 0 {
+		thejob := thejobs[0]
+
+		if thejob.fileinfo.IsDir() {
+			moreIDs := processDirectory(filepath.Join(thejob.parent, thejob.fileinfo.Name()))
+
+			if len(moreIDs) > 0 {
+				thejobs = append(thejobs, moreIDs...)
+			}
+		} else {
+			jobs <- filepath.Join(thejob.parent, thejob.fileinfo.Name())
+		}
+
+		thejobs = thejobs[1:]
+	}
+
+	close(jobs)
 }
 
 func runJobs(done chan<- struct{}, results chan<- string, jobs <-chan string) {
@@ -91,6 +122,7 @@ func runJobs(done chan<- struct{}, results chan<- string, jobs <-chan string) {
 			results <- result
 		}
 	}
+
 	done <- struct{}{}
 }
 
