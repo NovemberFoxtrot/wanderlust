@@ -57,9 +57,11 @@ func process(path string) (string, bool) {
 		for x := sourcebounds.Min.X; x < sourcebounds.Max.X; x++ {
 			sr, sg, sb, sa := sourceimage.At(x, y).RGBA()
 
-			colors[strconv.FormatUint(uint64(sr), 10)+strconv.FormatUint(uint64(sg), 10)+strconv.FormatUint(uint64(sb), 10)+strconv.FormatUint(uint64(sa), 10)] += 1
+			colors[strconv.FormatUint(uint64(sr/256), 10)+strconv.FormatUint(uint64(sg/256), 10)+strconv.FormatUint(uint64(sb/256), 10)+strconv.FormatUint(uint64(sa/256), 10)] += 1
 		}
 	}
+
+	fmt.Println(colors)
 
 	return path, true
 }
