@@ -3,15 +3,17 @@ package main
 import (
 	"fmt"
 	"image"
+	"os"
+	"path/filepath"
+	"runtime"
+	"strconv"
 
 	_ "image/color"
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
 
-	"os"
-	"path/filepath"
-	"runtime"
+	"github.com/gosexy/exif"
 )
 
 func process(path string) (string, bool) {
@@ -28,10 +30,35 @@ func process(path string) (string, bool) {
 		fmt.Fprintln(os.Stderr, path, "error", err)
 	}
 
-	_, _, err = image.Decode(file)
+	sourceimage, _, err := image.Decode(file)
 
 	if err != nil {
 		return path, false
+	}
+
+	reader := exif.New()
+
+	err = reader.Open(path)
+
+	if err != nil {
+		// fmt.Println("Error: %s", err.Error())
+	} else {
+
+		for key, val := range reader.Tags {
+			fmt.Printf("%s: %s\n", key, val)
+		}
+	}
+
+	sourcebounds := sourceimage.Bounds()
+
+	colors := make(map[string]int)
+
+	for y := sourcebounds.Min.Y; y < sourcebounds.Max.Y; y++ {
+		for x := sourcebounds.Min.X; x < sourcebounds.Max.X; x++ {
+			sr, sg, sb, sa := sourceimage.At(x, y).RGBA()
+
+			colors[strconv.FormatUint(uint64(sr), 10)+strconv.FormatUint(uint64(sg), 10)+strconv.FormatUint(uint64(sb), 10)+strconv.FormatUint(uint64(sa), 10)] += 1
+		}
 	}
 
 	return path, true
