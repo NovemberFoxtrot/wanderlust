@@ -30,7 +30,6 @@ func process(path string) (string, bool) {
 		fmt.Fprintln(os.Stderr, path, "error", err)
 	}
 
-	// sourceimage, _, err := image.Decode(file)
 	_, _, err = image.Decode(file)
 
 	if err != nil {
@@ -49,21 +48,7 @@ func process(path string) (string, bool) {
 			fmt.Printf("%s: %s\n", key, val)
 		}
 	}
-/*
-	sourcebounds := sourceimage.Bounds()
 
-	colors := make(map[string]int)
-
-	for y := sourcebounds.Min.Y; y < sourcebounds.Max.Y; y++ {
-		for x := sourcebounds.Min.X; x < sourcebounds.Max.X; x++ {
-			sr, sg, sb, sa := sourceimage.At(x, y).RGBA()
-
-			colors[strconv.FormatUint(uint64(sr/256), 10)+strconv.FormatUint(uint64(sg/256), 10)+strconv.FormatUint(uint64(sb/256), 10)+strconv.FormatUint(uint64(sa/256), 10)] += 1
-		}
-	}
-
-	fmt.Println(colors)
-*/
 	return path, true
 }
 
