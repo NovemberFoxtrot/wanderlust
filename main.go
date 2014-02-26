@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"strconv"
+	// "strconv"
 
 	_ "image/color"
 	_ "image/gif"
@@ -30,7 +30,8 @@ func process(path string) (string, bool) {
 		fmt.Fprintln(os.Stderr, path, "error", err)
 	}
 
-	sourceimage, _, err := image.Decode(file)
+	// sourceimage, _, err := image.Decode(file)
+	_, _, err = image.Decode(file)
 
 	if err != nil {
 		return path, false
@@ -48,7 +49,7 @@ func process(path string) (string, bool) {
 			fmt.Printf("%s: %s\n", key, val)
 		}
 	}
-
+/*
 	sourcebounds := sourceimage.Bounds()
 
 	colors := make(map[string]int)
@@ -62,7 +63,7 @@ func process(path string) (string, bool) {
 	}
 
 	fmt.Println(colors)
-
+*/
 	return path, true
 }
 
