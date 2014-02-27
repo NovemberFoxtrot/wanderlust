@@ -40,10 +40,7 @@ func process(path string) (string, bool) {
 
 	err = reader.Open(path)
 
-	if err != nil {
-		// fmt.Println("Error: %s", err.Error())
-	} else {
-
+	if err == nil {
 		for key, val := range reader.Tags {
 			fmt.Printf("%s: %s\n", key, val)
 		}
