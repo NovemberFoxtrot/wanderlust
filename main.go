@@ -40,11 +40,18 @@ func process(path string) (string, bool) {
 
 	err = reader.Open(path)
 
+	models := make(map[string]int)
+
 	if err == nil {
-		for key, val := range reader.Tags {
-			fmt.Printf("%s: %s\n", key, val)
+		for key, value := range reader.Tags {
+			fmt.Printf("%s: %s\n", key, value)
+			if key == `Model` {
+				models[value] += 1
+			} 
 		}
 	}
+
+	fmt.Println(models)
 
 	return path, true
 }
