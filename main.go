@@ -19,7 +19,7 @@ import (
 func process(path string) (string, bool) {
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Fprintln(os.Stderr, path, "panic", r)
+			fmt.Fprintln(os.Stderr, path, "panic:", r)
 		}
 	}()
 
